@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart, ChevronDown } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import { formatINR } from '../utils/formatting';
 
-const statusColors = {
-  Delivered: 'bg-green-100 text-green-700',
-  Shipped: 'bg-blue-100 text-blue-700',
-  Pending: 'bg-yellow-100 text-yellow-700',
-  Cancelled: 'bg-red-100 text-red-700',
+const STATUS_META = {
+  Delivered: { bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
+  Shipped:   { bg: '#eff6ff', color: '#2563eb', dot: '#3b82f6' },
+  Pending:   { bg: '#fffbeb', color: '#d97706', dot: '#f59e0b' },
+  Cancelled: { bg: '#fef2f2', color: '#dc2626', dot: '#ef4444' },
 };
 
-export default function Orders() {
-  const [orders, setOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
+const STATUS_OPTIONS = ['All', 'Pending', 'Shipped', 'Delivered', 'Cancelled'];
 
-  const statusOptions = ['All', 'Pending', 'Shipped', 'Delivered', 'Cancelled'];
+export default function Orders() {
+  const [orders]         = useState([]);
+  const [searchTerm, setSearchTerm]     = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
 
   const filtered = orders.filter((o) => {
     const matchesSearch =
@@ -26,82 +26,138 @@ export default function Orders() {
     return matchesSearch && matchesStatus;
   });
 
+  const counts = STATUS_OPTIONS.reduce((acc, s) => {
+    acc[s] = s === 'All' ? orders.length : orders.filter((o) => o.status === s).length;
+    return acc;
+  }, {});
+
   return (
     <MainLayout>
-      <div className="mb-8">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h1 className="text-4xl font-bold text-slate-900">Orders</h1>
-          <p className="text-slate-600">Manage all customer orders</p>
-        </motion.div>
+      {/* ── Header ────────────────────────────── */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Orders</h1>
+        <p style={{ fontSize: '0.85rem', color: '#64748b' }}>{orders.length} total orders</p>
       </div>
 
       {orders.length > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <>
+          {/* ── Filters ─────────────────────────── */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+            {STATUS_OPTIONS.map((status) => {
+              const active = filterStatus === status;
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '0.45rem 0.875rem',
+                    borderRadius: 9999,
+                    border: active ? '1.5px solid #2563eb' : '1.5px solid #e2e8f0',
+                    background: active ? '#eff6ff' : '#ffffff',
+                    color: active ? '#2563eb' : '#475569',
+                    fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
+                  }}
+                >
+                  {status}
+                  <span style={{
+                    fontSize: '0.65rem', fontWeight: 700,
+                    background: active ? '#dbeafe' : '#f1f5f9',
+                    color: active ? '#1d4ed8' : '#64748b',
+                    borderRadius: 9999, padding: '1px 7px',
+                  }}>
+                    {counts[status]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Search ─────────────────────────── */}
+          <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+            <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             <input
               type="text"
-              placeholder="Search by Order ID or Customer..."
+              placeholder="Search by Order ID or Customer…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem',
+                border: '1px solid #e2e8f0', borderRadius: 9,
+                fontSize: '0.875rem', color: '#0f172a', outline: 'none',
+                background: '#ffffff', boxSizing: 'border-box',
+              }}
             />
           </div>
-
-          <div className="flex gap-2">
-            {statusOptions.map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  filterStatus === status ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        </>
       )}
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+      {/* ── Table card ────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="admin-card"
+        style={{ overflow: 'hidden' }}
+      >
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <ShoppingCart className="w-14 h-14 text-slate-300 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700">No orders available</h3>
-            <p className="text-slate-500 mt-2">Orders will appear here when customers place them.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', textAlign: 'center' }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <ShoppingCart size={30} color="#94a3b8" />
+            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: 8 }}>No orders yet</h3>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', maxWidth: 300, lineHeight: 1.6 }}>
+              Orders will appear here once customers start placing them.
+            </p>
           </div>
         ) : (
-          <div className="overflow-auto">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 sticky top-0">
+          <div style={{ overflowX: 'auto' }}>
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <th className="p-4 text-sm text-slate-600">Order ID</th>
-                  <th className="p-4 text-sm text-slate-600">Customer</th>
-                  <th className="p-4 text-sm text-slate-600">Amount</th>
-                  <th className="p-4 text-sm text-slate-600">Date</th>
-                  <th className="p-4 text-sm text-slate-600">Status</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((order) => (
-                  <tr key={order.id} className="border-t">
-                    <td className="p-4 font-medium text-slate-900">{order.id}</td>
-                    <td className="p-4 text-slate-600">{order.customer}</td>
-                    <td className="p-4 text-slate-900 font-semibold">{formatINR(order.amount)}</td>
-                    <td className="p-4 text-slate-600">{order.date}</td>
-                    <td className="p-4">
-                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusColors[order.status]}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((order, idx) => {
+                  const meta = STATUS_META[order.status] ?? STATUS_META.Pending;
+                  return (
+                    <motion.tr
+                      key={order.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                    >
+                      <td>
+                        <span style={{ fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                          {order.id}
+                        </span>
+                      </td>
+                      <td style={{ color: '#334155', fontWeight: 500 }}>{order.customer}</td>
+                      <td style={{ fontWeight: 700, color: '#0f172a' }}>{formatINR(order.amount)}</td>
+                      <td style={{ color: '#64748b' }}>{order.date}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          padding: '3px 10px', borderRadius: 9999,
+                          background: meta.bg, color: meta.color,
+                          fontWeight: 600, fontSize: '0.72rem',
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta.dot }} />
+                          {order.status}
+                        </span>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
     </MainLayout>
   );
 }

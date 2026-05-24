@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import {
   LayoutDashboard,
   Package,
@@ -9,106 +8,161 @@ import {
   MessageSquare,
   Users,
   Settings,
-  FileText,
+  BarChart3,
+  X,
+  ChevronRight,
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
-  { icon: Package, label: 'Products', path: '/admin/products' },
-  { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
-  { icon: MessageSquare, label: 'Messages', path: '/admin/messages' },
-  { icon: Users, label: 'Customers', path: '/admin/customers' },
-  { icon: FileText, label: 'Analytics', path: '/admin/analytics' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: LayoutDashboard, label: 'Dashboard',  path: '/admin/dashboard' },
+  { icon: Package,         label: 'Products',   path: '/admin/products'  },
+  { icon: ShoppingCart,    label: 'Orders',     path: '/admin/orders'    },
+  { icon: MessageSquare,   label: 'Messages',   path: '/admin/messages'  },
+  { icon: Users,           label: 'Customers',  path: '/admin/customers' },
+  { icon: BarChart3,       label: 'Analytics',  path: '/admin/analytics' },
+  { icon: Settings,        label: 'Settings',   path: '/admin/settings'  },
+];
+
+const navGroups = [
+  { label: 'Main',      items: navItems.slice(0, 4) },
+  { label: 'Insights',  items: navItems.slice(4, 6) },
+  { label: 'System',    items: navItems.slice(6) },
 ];
 
 export default function Sidebar({ open, onClose }) {
   const location = useLocation();
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-        />
-      )}
-
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{
-          x: open ? 0 : -300,
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed md:relative left-0 top-0 h-full w-64 bg-white border-r border-slate-200 z-30 overflow-y-auto flex flex-col"
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1">
-              <img src={logo} alt="Harshitha Enterprises" className="w-10 h-10 object-contain flex-shrink-0" />
-              <div className="min-w-0">
-                <h1 className="text-lg font-bold text-slate-900 truncate">Harshitha</h1>
-                <p className="text-xs text-slate-500">Admin Panel</p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition"
-            >
-              <X className="w-5 h-5 text-slate-600" />
-            </button>
+    <aside className={`sidebar${open ? ' open' : ''}`}>
+      {/* ── Brand ─────────────────────────────── */}
+      <div style={{
+        padding: '1.25rem 1.25rem 1rem',
+        borderBottom: '1px solid #f1f5f9',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+          <img
+            src={logo}
+            alt="Harshitha Enterprises"
+            style={{ width: 38, height: 38, objectFit: 'contain', flexShrink: 0, borderRadius: 8 }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+              Harshitha
+            </p>
+            <p style={{ fontSize: '0.7rem', color: '#64748b', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 2 }}>
+              Admin Panel
+            </p>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+        <button
+          onClick={onClose}
+          className="lg:hidden"
+          style={{
+            padding: '0.375rem',
+            borderRadius: 8,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            color: '#64748b',
+            flexShrink: 0,
+          }}
+          aria-label="Close sidebar"
+        >
+          <X size={18} />
+        </button>
+      </div>
 
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => onClose()}
-                className="group relative block"
-              >
-                <motion.div
-                  whileHover={{ x: 4 }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
+      {/* ── Navigation ────────────────────────── */}
+      <nav style={{ flex: 1, padding: '0.75rem 0.75rem', overflowY: 'auto' }}>
+        {navGroups.map((group) => (
+          <div key={group.label} style={{ marginBottom: '1.25rem' }}>
+            <p style={{
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              color: '#94a3b8',
+              textTransform: 'uppercase',
+              letterSpacing: '0.07em',
+              padding: '0 0.5rem',
+              marginBottom: '0.375rem',
+            }}>
+              {group.label}
+            </p>
+
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => window.innerWidth < 1024 && onClose()}
+                  style={{ display: 'block', marginBottom: '0.125rem' }}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm">{item.label}</span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-600 rounded-r"
-                    />
-                  )}
-                </motion.div>
-              </Link>
-            );
-          })}
-        </nav>
+                  <motion.div
+                    whileHover={{ x: 3 }}
+                    transition={{ duration: 0.15 }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.625rem 0.75rem',
+                      borderRadius: 9,
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      background: isActive
+                        ? 'linear-gradient(135deg, #eff6ff, #dbeafe)'
+                        : 'transparent',
+                      color: isActive ? '#1d4ed8' : '#475569',
+                      border: isActive ? '1px solid #bfdbfe' : '1px solid transparent',
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 3,
+                          height: 20,
+                          background: '#2563eb',
+                          borderRadius: '0 3px 3px 0',
+                        }}
+                      />
+                    )}
+                    <Icon size={17} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {isActive && (
+                      <ChevronRight size={14} style={{ opacity: 0.5 }} />
+                    )}
+                  </motion.div>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200">
-          <p className="text-xs text-slate-500 text-center">
-            © 2026 Harshitha Enterprises
-          </p>
-        </div>
-      </motion.aside>
-    </>
+      {/* ── Footer ────────────────────────────── */}
+      <div style={{
+        padding: '0.875rem 1.25rem',
+        borderTop: '1px solid #f1f5f9',
+        textAlign: 'center',
+      }}>
+        <p style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+          © 2026 Harshitha Enterprises
+        </p>
+      </div>
+    </aside>
   );
 }

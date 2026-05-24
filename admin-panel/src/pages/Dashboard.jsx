@@ -6,45 +6,86 @@ import {
   Package,
   Users,
   MessageSquare,
-  DollarSign,
+  IndianRupee,
   AlertCircle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
 } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import Avatar from '../components/Avatar';
 import { formatINR, formatNumber } from '../utils/formatting';
 
-const StatCard = ({ icon: Icon, title, value, change, color }) => (
+/* ── Stat Card ─────────────────────────────────────────────── */
+const StatCard = ({ icon: Icon, title, value, change, color, delay }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    whileHover={{ y: -5 }}
-    className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm hover:shadow-md transition h-full"
+    transition={{ delay, duration: 0.3 }}
+    whileHover={{ y: -3 }}
+    style={{
+      background: '#ffffff',
+      borderRadius: 12,
+      padding: '1.25rem 1.5rem',
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.75rem',
+      cursor: 'default',
+    }}
   >
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-slate-600 text-sm font-medium mb-1">{title}</p>
-        <p className="text-3xl font-bold text-slate-900 mb-2">{value}</p>
-        <p className={`text-xs font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {change >= 0 ? '↑' : '↓'} {Math.abs(change)}% vs last month
-        </p>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        background: color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <Icon size={20} color="#ffffff" />
       </div>
-      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
+      <span style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 3,
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        color: change >= 0 ? '#16a34a' : '#dc2626',
+        background: change >= 0 ? '#f0fdf4' : '#fef2f2',
+        padding: '0.2rem 0.5rem',
+        borderRadius: 9999,
+      }}>
+        {change >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+        {Math.abs(change)}%
+      </span>
+    </div>
+
+    <div>
+      <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
+      <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4, fontWeight: 500 }}>{title}</p>
     </div>
   </motion.div>
 );
 
+/* ── Empty State ───────────────────────────────────────────── */
 const EmptyState = ({ icon: Icon, title, description }) => (
-  <div className="flex flex-col items-center justify-center py-12 px-6">
-    <Icon className="w-16 h-16 text-slate-300 mb-4" />
-    <h3 className="text-lg font-semibold text-slate-700 mb-2">{title}</h3>
-    <p className="text-slate-500 text-center max-w-sm">{description}</p>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem', textAlign: 'center' }}>
+    <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+      <Icon size={28} color="#94a3b8" />
+    </div>
+    <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#475569', marginBottom: 6 }}>{title}</h3>
+    <p style={{ fontSize: '0.825rem', color: '#94a3b8', maxWidth: 280, lineHeight: 1.6 }}>{description}</p>
   </div>
 );
 
+/* ── Dashboard ─────────────────────────────────────────────── */
 export default function Dashboard() {
-  const [stats, setStats] = useState({
+  const [loading, setLoading] = useState(true);
+  const [stats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
     deliveredOrders: 0,
@@ -52,70 +93,31 @@ export default function Dashboard() {
     totalProducts: 0,
     totalMessages: 0,
   });
-
-  const [orders, setOrders] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [orders] = useState([]);
+  const [messages] = useState([]);
 
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    const t = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(t);
   }, []);
 
   const statCards = [
-    {
-      icon: ShoppingCart,
-      title: 'Total Orders',
-      value: formatNumber(stats.totalOrders),
-      change: 0,
-      color: 'from-blue-500 to-blue-600',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Pending Orders',
-      value: formatNumber(stats.pendingOrders),
-      change: 0,
-      color: 'from-yellow-500 to-yellow-600',
-    },
-    {
-      icon: Package,
-      title: 'Delivered',
-      value: formatNumber(stats.deliveredOrders),
-      change: 0,
-      color: 'from-green-500 to-green-600',
-    },
-    {
-      icon: DollarSign,
-      title: 'Total Revenue',
-      value: formatINR(stats.totalRevenue),
-      change: 0,
-      color: 'from-purple-500 to-purple-600',
-    },
-    {
-      icon: Package,
-      title: 'Total Products',
-      value: formatNumber(stats.totalProducts),
-      change: 0,
-      color: 'from-indigo-500 to-indigo-600',
-    },
-    {
-      icon: MessageSquare,
-      title: 'New Messages',
-      value: formatNumber(stats.totalMessages),
-      change: 0,
-      color: 'from-cyan-500 to-cyan-600',
-    },
+    { icon: ShoppingCart, title: 'Total Orders',    value: formatNumber(stats.totalOrders),    change: 0, color: 'linear-gradient(135deg, #3b82f6, #2563eb)' },
+    { icon: TrendingUp,   title: 'Pending Orders',  value: formatNumber(stats.pendingOrders),  change: 0, color: 'linear-gradient(135deg, #f59e0b, #d97706)' },
+    { icon: Package,      title: 'Delivered',       value: formatNumber(stats.deliveredOrders),change: 0, color: 'linear-gradient(135deg, #10b981, #059669)' },
+    { icon: IndianRupee,  title: 'Total Revenue',   value: formatINR(stats.totalRevenue),      change: 0, color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
+    { icon: Package,      title: 'Total Products',  value: formatNumber(stats.totalProducts),  change: 0, color: 'linear-gradient(135deg, #6366f1, #4f46e5)' },
+    { icon: MessageSquare,title: 'New Messages',    value: formatNumber(stats.totalMessages),  change: 0, color: 'linear-gradient(135deg, #06b6d4, #0891b2)' },
   ];
 
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-96">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }}>
-            <AlertCircle className="w-8 h-8 text-blue-500" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 12 }}>
+          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}>
+            <AlertCircle size={28} color="#3b82f6" />
           </motion.div>
+          <p style={{ color: '#64748b', fontWeight: 500 }}>Loading dashboard…</p>
         </div>
       </MainLayout>
     );
@@ -123,70 +125,73 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      {/* Header */}
-      <div className="mb-8">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Welcome back, Admin!
-          </h1>
-          <p className="text-slate-600">
-            Here's what's happening with your store today.
-          </p>
-        </motion.div>
-      </div>
+      {/* ── Welcome banner ─────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%)',
+          borderRadius: 14,
+          padding: '1.5rem 2rem',
+          marginBottom: '1.75rem',
+          color: '#ffffff',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Decorative blobs */}
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+        <div style={{ position: 'absolute', bottom: -20, right: 80, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-stretch">
-        {statCards.map((card, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="h-full"
-          >
-            <StatCard {...card} />
-          </motion.div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            Welcome back
+          </p>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: 4 }}>
+            Harshitha Enterprises
+          </h1>
+          <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+            Here's an overview of your store today.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── Stats grid ─────────────────────────── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.75rem',
+      }}>
+        {statCards.map((card, i) => (
+          <StatCard key={i} {...card} delay={i * 0.07} />
         ))}
       </div>
 
-      {/* Recent Orders & Messages */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Bottom panels ──────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
         {/* Recent Orders */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-            className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 h-full"
+          transition={{ delay: 0.5 }}
+          className="admin-card"
         >
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Orders</h3>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>Recent Orders</h3>
+            <span style={{ fontSize: '0.72rem', color: '#3b82f6', fontWeight: 600, cursor: 'pointer' }}>View all →</span>
+          </div>
           {orders.length === 0 ? (
-            <EmptyState
-              icon={ShoppingCart}
-              title="No orders available"
-              description="Orders will appear here as customers place them."
-            />
+            <EmptyState icon={ShoppingCart} title="No orders yet" description="Orders will appear here when customers place them." />
           ) : (
-            <div className="space-y-4">
+            <div style={{ padding: '0.75rem 1rem' }}>
               {orders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
+                <div key={order.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0', borderBottom: '1px solid #f8fafc' }}>
                   <div>
-                    <p className="font-medium text-slate-900">{order.id}</p>
-                    <p className="text-sm text-slate-500">{order.customer}</p>
+                    <p style={{ fontSize: '0.825rem', fontWeight: 600, color: '#0f172a' }}>{order.id}</p>
+                    <p style={{ fontSize: '0.72rem', color: '#64748b' }}>{order.customer}</p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-semibold text-slate-900">{formatINR(order.amount)}</span>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                      order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0f172a' }}>{formatINR(order.amount)}</span>
                 </div>
               ))}
             </div>
@@ -197,30 +202,71 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 h-full"
+          transition={{ delay: 0.6 }}
+          className="admin-card"
         >
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Messages</h3>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>Recent Messages</h3>
+            <span style={{ fontSize: '0.72rem', color: '#3b82f6', fontWeight: 600, cursor: 'pointer' }}>View all →</span>
+          </div>
           {messages.length === 0 ? (
-            <EmptyState
-              icon={MessageSquare}
-              title="No messages yet"
-              description="Customer messages and inquiries will appear here."
-            />
+            <EmptyState icon={MessageSquare} title="No messages yet" description="Customer inquiries and messages will appear here." />
           ) : (
-            <div className="space-y-4">
+            <div style={{ padding: '0.75rem 1rem' }}>
               {messages.map((msg, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
-                  <Avatar name={msg.name} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 text-sm">{msg.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{msg.subject}</p>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0', borderBottom: '1px solid #f8fafc' }}>
+                  <Avatar name={msg.name} size="sm" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.825rem', fontWeight: 600, color: '#0f172a' }}>{msg.name}</p>
+                    <p style={{ fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.subject}</p>
                   </div>
-                  <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', flexShrink: 0 }} />
                 </div>
               ))}
             </div>
           )}
+        </motion.div>
+
+        {/* Quick actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="admin-card"
+        >
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>Quick Actions</h3>
+          </div>
+          <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {[
+              { label: 'Add New Product', color: '#3b82f6', bg: '#eff6ff' },
+              { label: 'View All Orders', color: '#10b981', bg: '#f0fdf4' },
+              { label: 'Check Messages', color: '#8b5cf6', bg: '#f5f3ff' },
+              { label: 'Manage Customers', color: '#f59e0b', bg: '#fffbeb' },
+            ].map(({ label, color, bg }) => (
+              <button
+                key={label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.625rem 0.875rem',
+                  borderRadius: 9,
+                  border: 'none',
+                  background: bg,
+                  color,
+                  fontWeight: 600,
+                  fontSize: '0.825rem',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                {label}
+                <ArrowUpRight size={14} />
+              </button>
+            ))}
+          </div>
         </motion.div>
       </div>
     </MainLayout>
