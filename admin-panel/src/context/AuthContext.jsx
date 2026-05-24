@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -14,38 +15,51 @@ export const AuthProvider = ({ children }) => {
       } catch (e) {
         console.error('Failed to parse stored user:', e);
         localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_token');
       }
     }
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Authentication should be implemented via backend API in production.
-    // The local fallback below is only allowed during development (import.meta.env.DEV).
-    // Remove this block before deploying to production or replace with real auth.
-    if (import.meta.env.DEV) {
-      if (email === 'admin@gmail.com' && password === 'admin@123') {
+  const login = async (email, password) => {
+    try {
+      // Direct local bypass during development if backend is not reachable/desired
+      if (import.meta.env.DEV && email === 'admin@gmail.com' && password === 'admin@123') {
         const userData = {
           id: 1,
           email,
-          name: 'Admin',
+          name: 'Dev Admin',
           role: 'admin',
-          // Use local initials-based Avatar component instead of external dicebear images
           avatar: null,
         };
         setUser(userData);
         localStorage.setItem('admin_user', JSON.stringify(userData));
-        return true;
+        localStorage.setItem('admin_token', 'dev-mock-token');
+        return { success: true };
       }
-    }
 
-    // In non-development environments, return false to prevent accidental bypass.
-    return false;
+      const response = await api.post('/api/auth/login', { email, password });
+      const { token, user: userData } = response.data;
+
+      if (userData.role !== 'admin') {
+        return { success: false, error: 'Access Denied: Admin privileges required.' };
+      }
+
+      setUser(userData);
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_user', JSON.stringify(userData));
+      return { success: true };
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMsg = err.response?.data?.message || 'Invalid email or password';
+      return { success: false, error: errorMsg };
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('admin_user');
+    localStorage.removeItem('admin_token');
   };
 
   return (

@@ -18,12 +18,12 @@ export default function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600)); // simulate network
     try {
-      if (login(email, password)) {
+      const res = await login(email, password);
+      if (res.success) {
         navigate('/admin/dashboard');
       } else {
-        setError('Invalid email or password. Please try again.');
+        setError(res.error || 'Invalid email or password. Please try again.');
       }
     } catch {
       setError('Something went wrong. Please try again.');

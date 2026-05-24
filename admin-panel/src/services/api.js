@@ -36,15 +36,11 @@ api.interceptors.response.use(
 
 // Products API
 export const productsAPI = {
-  getAll: (params) => api.get('/api/products', { params }),
-  getById: (id) => api.get(`/api/products/${id}`),
-  create: (data) => api.post('/api/products', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  update: (id, data) => api.put(`/api/products/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  delete: (id) => api.delete(`/api/products/${id}`),
+  getAll: (params) => api.get('/api/product', { params }),
+  getById: (id) => api.get(`/api/product/${id}`),
+  create: (data) => api.post('/api/product/createProduct', data),
+  update: (id, data) => api.put(`/api/product/update/${id}`, data),
+  delete: (id) => api.delete(`/api/product/delete/${id}`),
 };
 
 // Orders API

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import { formatINR } from '../utils/formatting';
+import { productsAPI } from '../services/api';
 
 /* ─── Constants ──────────────────────────────────────────── */
 const STORAGE_KEY = 'he_products';
@@ -51,15 +52,11 @@ const DEFAULT_FORM = {
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function loadProducts() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 function saveProducts(list) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // Products are now saved to the backend database.
 }
 
 function readFileAsBase64(file) {
@@ -255,7 +252,8 @@ const ProductCard = ({ product, onEdit, onDelete, onPreview, idx }) => {
 
 /* ─── Main Component ─────────────────────────────────────── */
 export default function Products() {
-  const [products, setProducts]     = useState(loadProducts);
+  const [products, setProducts]     = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCat, setFilterCat]   = useState('All');
   const [modalOpen, setModalOpen]   = useState(false);
@@ -267,8 +265,26 @@ export default function Products() {
   const [saving, setSaving]         = useState(false);
   const fileInputRef = useRef(null);
 
-  // Persist to localStorage whenever products change
-  useEffect(() => { saveProducts(products); }, [products]);
+  // Fetch products from the backend API on mount
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await productsAPI.getAll();
+      const normalized = response.data.map((p) => ({
+        ...p,
+        id: p._id || p.id,
+      }));
+      setProducts(normalized);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filtered = products.filter((p) => {
     const q = searchTerm.toLowerCase();
@@ -308,9 +324,15 @@ export default function Products() {
     setImagePreview(null);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Delete this product? This cannot be undone.')) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      try {
+        await productsAPI.delete(id);
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      } catch (err) {
+        console.error('Failed to delete product:', err);
+        alert('Failed to delete product from the backend.');
+      }
     }
   };
 
@@ -336,23 +358,46 @@ export default function Products() {
     e.preventDefault();
     if (!formData.name || !formData.category || !formData.price) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 350));
 
-    const entry = {
-      ...formData,
-      id:    editId ?? Date.now(),
+    const payload = {
+      name: formData.name,
+      brand: formData.brand,
+      category: formData.category,
+      model: formData.model,
       price: parseFloat(formData.price) || 0,
-      mrp:   formData.mrp ? parseFloat(formData.mrp) : null,
+      mrp: formData.mrp ? parseFloat(formData.mrp) : null,
       stock: parseInt(formData.stock) || 0,
+      Description: formData.description,
+      description: formData.description,
+      image: formData.image,
+      badge: formData.badge,
+      featured: formData.featured || false,
+      latest: formData.latest || false,
     };
 
-    setProducts((prev) =>
-      editId
-        ? prev.map((p) => (p.id === editId ? entry : p))
-        : [entry, ...prev]
-    );
-    setSaving(false);
-    closeModal();
+    try {
+      if (editId) {
+        const response = await productsAPI.update(editId, payload);
+        const updated = {
+          ...response.data,
+          id: response.data._id || response.data.id,
+        };
+        setProducts((prev) => prev.map((p) => (p.id === editId ? updated : p)));
+      } else {
+        const response = await productsAPI.create(payload);
+        const created = {
+          ...response.data,
+          id: response.data._id || response.data.id,
+        };
+        setProducts((prev) => [created, ...prev]);
+      }
+      closeModal();
+    } catch (err) {
+      console.error('Failed to save product:', err);
+      alert(err.response?.data?.message || 'Failed to save product to backend.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   /* ─────────────────────────────────────────────────────── */
@@ -363,7 +408,7 @@ export default function Products() {
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Products</h1>
           <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            {products.length} product{products.length !== 1 ? 's' : ''} · Saved to local storage
+            {products.length} product{products.length !== 1 ? 's' : ''} · Synced with live database
           </p>
         </div>
         <motion.button
@@ -433,8 +478,19 @@ export default function Products() {
         )}
       </div>
 
-      {/* ── Grid / Empty ─────────────────────────── */}
-      {products.length === 0 ? (
+      {/* ── Grid / Empty / Loading ───────────────── */}
+      {loading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.125rem' }}>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} style={{ height: 360, background: '#ffffff', borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', padding: '1rem', boxSizing: 'border-box' }}>
+              <div style={{ width: '100%', height: 160, background: '#f1f5f9', borderRadius: 10, marginBottom: '1rem' }} />
+              <div style={{ width: '80%', height: 18, background: '#f1f5f9', borderRadius: 4, marginBottom: '0.75rem' }} />
+              <div style={{ width: '50%', height: 14, background: '#f1f5f9', borderRadius: 4, marginBottom: '0.75rem' }} />
+              <div style={{ width: '60%', height: 20, background: '#f1f5f9', borderRadius: 4, marginTop: 'auto' }} />
+            </div>
+          ))}
+        </div>
+      ) : products.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
