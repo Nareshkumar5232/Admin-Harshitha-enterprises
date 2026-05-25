@@ -66,4 +66,12 @@ export const dashboardAPI = {
   getRevenue: () => api.get('/api/admin/revenue'),
 };
 
+// Payouts API
+export const payoutsAPI = {
+  list: () => api.get('/api/payout/list'),
+  addBeneficiary: (data) => api.post('/api/payout/beneficiary', data),
+  initiateTransfer: (data) => api.post('/api/payout/transfer', data),
+  verifyStatus: (transfer_id) => api.get(`/api/payout/transfer/${transfer_id}`),
+};
+
 export default api;

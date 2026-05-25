@@ -13,6 +13,7 @@ import Messages from './pages/Messages';
 import Customers from './pages/Customers';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
+import Payouts from './pages/Payouts';
 
 export default function App() {
   return (
@@ -77,6 +78,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/payouts"
+              element={
+                <ProtectedRoute>
+                  <Payouts />
                 </ProtectedRoute>
               }
             />

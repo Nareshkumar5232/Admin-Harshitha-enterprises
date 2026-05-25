@@ -11,6 +11,7 @@ import {
   BarChart3,
   X,
   ChevronRight,
+  CreditCard,
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -19,15 +20,16 @@ const navItems = [
   { icon: Package,         label: 'Products',   path: '/admin/products'  },
   { icon: ShoppingCart,    label: 'Orders',     path: '/admin/orders'    },
   { icon: MessageSquare,   label: 'Messages',   path: '/admin/messages'  },
+  { icon: CreditCard,      label: 'Payouts',    path: '/admin/payouts'   },
   { icon: Users,           label: 'Customers',  path: '/admin/customers' },
   { icon: BarChart3,       label: 'Analytics',  path: '/admin/analytics' },
   { icon: Settings,        label: 'Settings',   path: '/admin/settings'  },
 ];
 
 const navGroups = [
-  { label: 'Main',      items: navItems.slice(0, 4) },
-  { label: 'Insights',  items: navItems.slice(4, 6) },
-  { label: 'System',    items: navItems.slice(6) },
+  { label: 'Main',      items: navItems.slice(0, 5) },
+  { label: 'Insights',  items: navItems.slice(5, 7) },
+  { label: 'System',    items: navItems.slice(7) },
 ];
 
 export default function Sidebar({ open, onClose }) {
